@@ -20,12 +20,24 @@ $(document).ready(function() {
     var ny = y / 16;
     for (var x = 0; x < 32; x++) {
       var pixel = Math.floor((simplex.noise(x / 16, ny) + 1) * 2.5);
-      Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
+      var tile = Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
         x: x * 16,
         y: y * 16,
         width: 16,
         height: 16,
-      });
+      }).origin('center');
+
+      tile.intersect = function(x, y, w, h) {
+        var rect;
+        if (typeof x === "object") {
+          rect = x;
+        } else {
+          rect = {x: x, y: y, w: w, h: h};
+        }
+
+        return this._x + 8 < rect.x + rect.w && this._x + this._w - 8 > rect.x &&
+          this._y + 8 < rect.y + rect.h && this._h + this._y - 8 > rect.y;
+      };
     }
   }
 
@@ -47,57 +59,57 @@ $(document).ready(function() {
   });
 
   var player = Crafty.e('2D, DOM, player, controls, collision')
-      .attr({
-        move: {
-          left: false,
-          right: false,
-          up: false,
-          down: false,
-        },
-        speed: 0,
-        drag: 1.0,
-        decay: 0.95,
-        x: Crafty.viewport.width / 2,
-        y: Crafty.viewport.height / 2,
-      })
-      .origin('center')
-      .bind("keydown", function(e) {
-        if (e.keyCode === Crafty.keys.RA) {
-          this.move.right = true;
-        } else if (e.keyCode === Crafty.keys.LA) {
-          this.move.left = true;
-        } else if (e.keyCode === Crafty.keys.UA) {
-          this.move.up = true;
-        }
-      }).bind("keyup", function(e) {
-        if (e.keyCode === Crafty.keys.RA) {
-          this.move.right = false;
-        } else if (e.keyCode === Crafty.keys.LA) {
-          this.move.left = false;
-        } else if (e.keyCode === Crafty.keys.UA) {
-          this.move.up = false;
-        }
-      }).bind("enterframe", function() {
-        if (this.move.right) this.rotation += 4;
-        if (this.move.left) this.rotation -= 4;
+    .attr({
+      move: {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+      },
+      speed: 0,
+      drag: 1.0,
+      decay: 0.95,
+      x: Crafty.viewport.width / 2,
+      y: Crafty.viewport.height / 2,
+    })
+    .origin('center')
+    .bind("keydown", function(e) {
+      if (e.keyCode === Crafty.keys.RA) {
+        this.move.right = true;
+      } else if (e.keyCode === Crafty.keys.LA) {
+        this.move.left = true;
+      } else if (e.keyCode === Crafty.keys.UA) {
+        this.move.up = true;
+      }
+    }).bind("keyup", function(e) {
+      if (e.keyCode === Crafty.keys.RA) {
+        this.move.right = false;
+      } else if (e.keyCode === Crafty.keys.LA) {
+        this.move.left = false;
+      } else if (e.keyCode === Crafty.keys.UA) {
+        this.move.up = false;
+      }
+    }).bind("enterframe", function() {
+      if (this.move.right) this.rotation += 4;
+      if (this.move.left) this.rotation -= 4;
 
-        if (this.move.up) {
-          this.speed = Math.min(this.speed + 0.1, 1.2) * this.drag;
-        } else {
-          this.speed *= this.decay * this.drag;
-        }
+      if (this.move.up) {
+        this.speed = Math.min(this.speed + 0.1, 1.2) * this.drag;
+      } else {
+        this.speed *= this.decay * this.drag;
+      }
 
-        var vx = Math.sin(this._rotation * Math.PI / 180) * this.speed,
-            vy = Math.cos(this._rotation * Math.PI / 180) * this.speed;
+      var vx = Math.sin(this._rotation * Math.PI / 180) * this.speed,
+      vy = Math.cos(this._rotation * Math.PI / 180) * this.speed;
 
-        this.x += vx;
-        this.y -= vy;
-      }).collision('water', function() {
-        this.drag = 0.2;
-      }).collision('snow', function() {
-        this.drag = 0.7;
-      }).collision('sand, dirt, grass', function() {
-        this.drag = 1.0;
-      });
+      this.x += vx;
+      this.y -= vy;
+    }).collision('water', function() {
+      this.drag = 0.2;
+    }).collision('snow', function() {
+      this.drag = 0.7;
+    }).collision('sand, dirt, grass', function() {
+      this.drag = 1.0;
+    });
 
 });
