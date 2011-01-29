@@ -1,3 +1,21 @@
+var map = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+  [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 0],
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
+  [2, 2, 3, 3, 3, 3, 3, 3, 3, 2, 0],
+  [2, 3, 3, 3, 4, 4, 4, 3, 3, 2, 0],
+  [2, 3, 3, 3, 4, 4, 4, 3, 2, 2, 0],
+  [2, 3, 3, 3, 3, 3, 3, 3, 2, 2, 0],
+  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
+  [2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+];
+
+var kind_map = ['water', 'sand', 'dirt', 'grass', 'snow'];
+
 $(document).ready(function() {
 
   Crafty.init(50, 500, 400);
@@ -11,18 +29,14 @@ $(document).ready(function() {
     snow: [4, 0, 1, 1],
   });
 
-  iso = Crafty.isometric.init(128);
-  var z = 0;
-  for(var i = 2; i >= 0; i--) {
-    for(var y = 0; y < 2; y++) {
-      var tile = Crafty.e("2D, DOM, grass, mouse").attr('z',i+1 * y+1).areaMap([64,0],[128,32],[128,96],[64,128],[0,96],[0,32]).bind("click", function() {
-        this.destroy();
-      }).bind("mouseover", function() {
-        this.sprite(0,1,1,1);
-      }).bind("mouseout", function() {
-        this.sprite(0,0,1,1);
+  for (var y = 0; y < map.length; y++) {
+    for (var x = 0; x < map[y].length; x++) {
+      Crafty.e('2D, DOM, tile, ' + kind_map[map[y][x]]).attr({
+        x: x * 16,
+        y: y * 16,
+        width: 16,
+        height: 16,
       });
-      iso.place(i,y,0, tile);
     }
   }
 
@@ -30,8 +44,7 @@ $(document).ready(function() {
     var base = {x: e.clientX, y: e.clientY};
 
     function scroll(e) {
-      var dx = base.x - e.clientX,
-      dy = base.y - e.clientY;
+      var dx = base.x - e.clientX, dy = base.y - e.clientY;
       base = {x: e.clientX, y: e.clientY};
 
       Crafty.viewport.x -= dx;
@@ -43,4 +56,5 @@ $(document).ready(function() {
       Crafty.removeEvent(this, Crafty.stage.elem, "mousemove", scroll);
     });
   });
+
 });
