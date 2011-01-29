@@ -55,6 +55,7 @@ $(document).ready(function() {
           down: false,
         },
         speed: 0,
+        drag: 1.0,
         decay: 0.95,
         x: Crafty.viewport.width / 2,
         y: Crafty.viewport.height / 2,
@@ -81,9 +82,9 @@ $(document).ready(function() {
         if (this.move.left) this.rotation -= 4;
 
         if (this.move.up) {
-          this.speed = Math.min(this.speed + 0.1, 1.2);
+          this.speed = Math.min(this.speed + 0.1, 1.2) * this.drag;
         } else {
-          this.speed *= this.decay;
+          this.speed *= this.decay * this.drag;
         }
 
         var vx = Math.sin(this._rotation * Math.PI / 180) * this.speed,
@@ -91,6 +92,12 @@ $(document).ready(function() {
 
         this.x += vx;
         this.y -= vy;
+      }).collision('water', function() {
+        this.drag = 0.2;
+      }).collision('snow', function() {
+        this.drag = 0.7;
+      }).collision('sand, dirt, grass', function() {
+        this.drag = 1.0;
       });
 
 });
