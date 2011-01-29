@@ -13,7 +13,7 @@ $(document).ready(function() {
     dirt: [2, 0, 1, 1],
     grass: [3, 0, 1, 1],
     snow: [4, 0, 1, 1],
-    player: [0, 1, 1, 1],
+    player: [0, 2, 1, 1],
   });
 
   for (var y = 0; y < 32; y++) {
