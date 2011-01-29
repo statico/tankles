@@ -54,8 +54,7 @@ $(document).ready(function() {
           up: false,
           down: false,
         },
-        xspeed: 0,
-        yspeed: 0,
+        speed: 0,
         decay: 0.95,
         x: Crafty.viewport.width / 2,
         y: Crafty.viewport.height / 2,
@@ -78,31 +77,20 @@ $(document).ready(function() {
           this.move.up = false;
         }
       }).bind("enterframe", function() {
-        if (this.move.right) this.rotation += 5;
-        if (this.move.left) this.rotation -= 5;
+        if (this.move.right) this.rotation += 4;
+        if (this.move.left) this.rotation -= 4;
 
-        //acceleration and movement vector
-        var vx = Math.sin(this._rotation * Math.PI / 180) * 0.3,
-          vy = Math.cos(this._rotation * Math.PI / 180) * 0.3;
-
-        // Max speed.
-        vx = Math.max(Math.min(vx, .02), -.02);
-        vy = Math.max(Math.min(vy, .02), -.02);
-
-        //if the move up is true, increment the y/xspeeds
-        if(this.move.up) {
-          this.yspeed -= vy;
-          this.xspeed += vx;
+        if (this.move.up) {
+          this.speed = Math.min(this.speed + 0.1, 1.2);
         } else {
-          //if released, slow down the ship
-          this.xspeed *= this.decay;
-          this.yspeed *= this.decay;
+          this.speed *= this.decay;
         }
 
-        //move the ship by the x and y speeds or movement vector
-        this.x += this.xspeed;
-        this.y += this.yspeed;
+        var vx = Math.sin(this._rotation * Math.PI / 180) * this.speed,
+            vy = Math.cos(this._rotation * Math.PI / 180) * this.speed;
 
+        this.x += vx;
+        this.y -= vy;
       });
 
 });
