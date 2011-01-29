@@ -1,0 +1,3 @@
+[submodule "third-party/Crafty"]
+	path = third-party/Crafty
+	url = https://github.com/louisstow/Crafty.git
