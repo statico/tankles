@@ -1,18 +1,4 @@
-var map = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-  [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 0],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-  [2, 2, 3, 3, 3, 3, 3, 3, 3, 2, 0],
-  [2, 3, 3, 3, 4, 4, 4, 3, 3, 2, 0],
-  [2, 3, 3, 3, 4, 4, 4, 3, 2, 2, 0],
-  [2, 3, 3, 3, 3, 3, 3, 3, 2, 2, 0],
-  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-  [2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 0],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-];
+var simplex = new SimplexNoise();
 
 var kind_map = ['water', 'sand', 'dirt', 'grass', 'snow'];
 
@@ -29,9 +15,12 @@ $(document).ready(function() {
     snow: [4, 0, 1, 1],
   });
 
-  for (var y = 0; y < map.length; y++) {
-    for (var x = 0; x < map[y].length; x++) {
-      Crafty.e('2D, DOM, tile, ' + kind_map[map[y][x]]).attr({
+  for (var y = 0; y < 32; y++) {
+    var ny = y / 16;
+    for (var x = 0; x < 32; x++) {
+      var pixel = Math.floor((simplex.noise(x / 16, ny) + 1) * 2.5);
+      console.log(x, y, pixel);
+      Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
         x: x * 16,
         y: y * 16,
         width: 16,
