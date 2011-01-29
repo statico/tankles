@@ -13,13 +13,13 @@ $(document).ready(function() {
     dirt: [2, 0, 1, 1],
     grass: [3, 0, 1, 1],
     snow: [4, 0, 1, 1],
+    player: [0, 1, 1, 1],
   });
 
   for (var y = 0; y < 32; y++) {
     var ny = y / 16;
     for (var x = 0; x < 32; x++) {
       var pixel = Math.floor((simplex.noise(x / 16, ny) + 1) * 2.5);
-      console.log(x, y, pixel);
       Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
         x: x * 16,
         y: y * 16,
@@ -45,5 +45,60 @@ $(document).ready(function() {
       Crafty.removeEvent(this, Crafty.stage.elem, "mousemove", scroll);
     });
   });
+
+  var player = Crafty.e('2D, DOM, player, controls, collision')
+      .attr({
+        move: {
+          left: false,
+          right: false,
+          up: false,
+          down: false,
+        },
+        xspeed: 0,
+        yspeed: 0,
+        decay: 0.9,
+        x: Crafty.viewport.width / 2,
+        y: Crafty.viewport.height / 2,
+      })
+      .origin('center')
+      .bind("keydown", function(e) {
+        if (e.keyCode === Crafty.keys.RA) {
+          this.move.right = true;
+        } else if (e.keyCode === Crafty.keys.LA) {
+          this.move.left = true;
+        } else if (e.keyCode === Crafty.keys.UA) {
+          this.move.up = true;
+        }
+      }).bind("keyup", function(e) {
+        if (e.keyCode === Crafty.keys.RA) {
+          this.move.right = false;
+        } else if (e.keyCode === Crafty.keys.LA) {
+          this.move.left = false;
+        } else if (e.keyCode === Crafty.keys.UA) {
+          this.move.up = false;
+        }
+      }).bind("enterframe", function() {
+        if (this.move.right) this.rotation += 5;
+        if (this.move.left) this.rotation -= 5;
+
+        //acceleration and movement vector
+        var vx = Math.sin(this._rotation * Math.PI / 180) * 0.3,
+          vy = Math.cos(this._rotation * Math.PI / 180) * 0.3;
+
+        //if the move up is true, increment the y/xspeeds
+        if(this.move.up) {
+          this.yspeed -= vy;
+          this.xspeed += vx;
+        } else {
+          //if released, slow down the ship
+          this.xspeed *= this.decay;
+          this.yspeed *= this.decay;
+        }
+
+        //move the ship by the x and y speeds or movement vector
+        this.x += this.xspeed;
+        this.y += this.yspeed;
+
+      });
 
 });
