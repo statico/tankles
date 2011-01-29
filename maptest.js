@@ -56,7 +56,7 @@ $(document).ready(function() {
         },
         xspeed: 0,
         yspeed: 0,
-        decay: 0.9,
+        decay: 0.95,
         x: Crafty.viewport.width / 2,
         y: Crafty.viewport.height / 2,
       })
@@ -84,6 +84,10 @@ $(document).ready(function() {
         //acceleration and movement vector
         var vx = Math.sin(this._rotation * Math.PI / 180) * 0.3,
           vy = Math.cos(this._rotation * Math.PI / 180) * 0.3;
+
+        // Max speed.
+        vx = Math.max(Math.min(vx, .02), -.02);
+        vy = Math.max(Math.min(vy, .02), -.02);
 
         //if the move up is true, increment the y/xspeeds
         if(this.move.up) {
