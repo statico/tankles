@@ -2,12 +2,53 @@ var simplex = new SimplexNoise();
 
 var kind_map = ['water', 'sand', 'dirt', 'grass', 'snow'];
 
+var TILE_SIZE = 16;
+var REGION_SIZE = 8;
+var cache = {}; // optimized
+
+function build_tile(vpx, vpy) {
+  var regionx = Math.floor(Math.floor(vpx / TILE_SIZE) / REGION_SIZE);
+  var regiony = Math.floor(Math.floor(vpy / TILE_SIZE) / REGION_SIZE);
+
+  if (cache[regionx + ':' + regiony]) return;
+  console.log('building', regionx, regiony);
+
+  for (var dx = 0; dx < REGION_SIZE; dx++) {
+    for (var dy = 0; dy < REGION_SIZE; dy++) {
+      var worldx = regionx * REGION_SIZE + dx;
+      var worldy = regiony * REGION_SIZE + dy;
+      var pixel = Math.floor((simplex.noise(worldx / 15, worldy / 15) + 1) * 2.5);
+
+      var tile = Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
+        x: worldx * TILE_SIZE - vpx,
+        y: worldy * TILE_SIZE - vpy,
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+      });
+      tile.intersect = tile_intersect;
+    }
+  }
+
+  cache[regionx + ':' + regiony] = true;
+}
+
+function tile_intersect(x, y, w, h) {
+  var rect;
+  if (typeof x === "object") {
+    rect = x;
+  } else {
+    rect = {x: x, y: y, w: w, h: h};
+  }
+  return this._x + 8 < rect.x + rect.w && this._x + this._w - 8 > rect.x &&
+    this._y + 8 < rect.y + rect.h && this._h + this._y - 8 > rect.y;
+};
+
 $(document).ready(function() {
 
-  Crafty.init(50, 500, 400);
+  Crafty.init(50, 400, 300);
   Crafty.canvas();
 
-  Crafty.sprite(16, "assets/tiles.png", {
+  Crafty.sprite(TILE_SIZE, "assets/tiles.png", {
     water: [0, 0, 1, 1],
     sand: [1, 0, 1, 1],
     dirt: [2, 0, 1, 1],
@@ -16,31 +57,7 @@ $(document).ready(function() {
     player: [0, 2, 1, 1],
   });
 
-  for (var y = 0; y < 32; y++) {
-    var ny = y / 16;
-    for (var x = 0; x < 32; x++) {
-      var pixel = Math.floor((simplex.noise(x / 16, ny) + 1) * 2.5);
-      var tile = Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
-        x: x * 16,
-        y: y * 16,
-        width: 16,
-        height: 16,
-      }).origin('center');
-
-      tile.intersect = function(x, y, w, h) {
-        var rect;
-        if (typeof x === "object") {
-          rect = x;
-        } else {
-          rect = {x: x, y: y, w: w, h: h};
-        }
-
-        return this._x + 8 < rect.x + rect.w && this._x + this._w - 8 > rect.x &&
-          this._y + 8 < rect.y + rect.h && this._h + this._y - 8 > rect.y;
-      };
-    }
-  }
-
+  // Panning
   Crafty.addEvent(this, Crafty.stage.elem, "mousedown", function(e) {
     var base = {x: e.clientX, y: e.clientY};
 
@@ -50,6 +67,16 @@ $(document).ready(function() {
 
       Crafty.viewport.x -= dx;
       Crafty.viewport.y -= dy;
+
+      r = Crafty.viewport.rect();
+      build_tile(-r.x, -r.y);
+      /*
+      for (yy = r.y / REGION_SIZE; yy < r.y + r.h; yy += REGION_SIZE) {
+        for (var xx = r.x / REGION_SIZE; xx < r.x + r.w; xx += REGION_SIZE) {
+          build_region(-xx, -yy);
+        }
+      }
+      */
     };
 
     Crafty.addEvent(this, Crafty.stage.elem, "mousemove", scroll);
