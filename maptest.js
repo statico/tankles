@@ -1,37 +1,40 @@
 var simplex = new SimplexNoise();
 
+var gvpx = 0, gvpy = 0;
+
 var kind_map = ['water', 'sand', 'dirt', 'grass', 'snow'];
 
 var TILE_SIZE = 16;
 var REGION_SIZE = 8;
 var cache = {}; // optimized
 
-function build_tile(vpx, vpy) {
-  var regionx = Math.floor(Math.floor(vpx / TILE_SIZE) / REGION_SIZE);
-  var regiony = Math.floor(Math.floor(vpy / TILE_SIZE) / REGION_SIZE);
-
+function build_region(vpx, vpy) {
+  var regionx = Math.floor(vpx / TILE_SIZE / REGION_SIZE);
+  var regiony = Math.floor(vpy / TILE_SIZE / REGION_SIZE);
   if (cache[regionx + ':' + regiony]) return;
-  console.log('building', regionx, regiony);
+  console.log('building region', regionx, regiony);
 
   for (var dx = 0; dx < REGION_SIZE; dx++) {
     for (var dy = 0; dy < REGION_SIZE; dy++) {
       var worldx = regionx * REGION_SIZE + dx;
       var worldy = regiony * REGION_SIZE + dy;
       var pixel = Math.floor((simplex.noise(worldx / 15, worldy / 15) + 1) * 2.5);
+      console.log('global: ', gvpx, gvpy);
+      console.log('Crafty.vp: ', Crafty.viewport.x, Crafty.viewport.y);
 
-      var tile = Crafty.e('2D, DOM, tile, ' + kind_map[pixel]).attr({
-        x: worldx * TILE_SIZE - vpx,
-        y: worldy * TILE_SIZE - vpy,
+      var tile = Crafty.e('2D, canvas, tile, ' + kind_map[pixel]).attr({
+        x: dx * TILE_SIZE + Crafty.viewport.x % TILE_SIZE,
+        y: dy * TILE_SIZE + Crafty.viewport.y % TILE_SIZE,
         width: TILE_SIZE,
         height: TILE_SIZE,
       });
+      console.log('drawing', tile.x, tile.y);
       tile.intersect = tile_intersect;
     }
   }
 
   cache[regionx + ':' + regiony] = true;
 }
-
 function tile_intersect(x, y, w, h) {
   var rect;
   if (typeof x === "object") {
@@ -45,7 +48,7 @@ function tile_intersect(x, y, w, h) {
 
 $(document).ready(function() {
 
-  Crafty.init(50, 400, 300);
+  Crafty.init(20, 4 * REGION_SIZE*TILE_SIZE, 3*REGION_SIZE*TILE_SIZE);
   Crafty.canvas();
 
   Crafty.sprite(TILE_SIZE, "assets/tiles.png", {
@@ -65,18 +68,24 @@ $(document).ready(function() {
       var dx = base.x - e.clientX, dy = base.y - e.clientY;
       base = {x: e.clientX, y: e.clientY};
 
-      Crafty.viewport.x -= dx;
-      Crafty.viewport.y -= dy;
+      gvpx += dx;
+      gvpx += dy;
 
-      r = Crafty.viewport.rect();
-      build_tile(-r.x, -r.y);
-      /*
-      for (yy = r.y / REGION_SIZE; yy < r.y + r.h; yy += REGION_SIZE) {
-        for (var xx = r.x / REGION_SIZE; xx < r.x + r.w; xx += REGION_SIZE) {
-          build_region(-xx, -yy);
+      var r = Crafty.viewport.rect(),
+          mx = r.x + r.w,
+          my = r.y + r.h;
+      //console.log("vp: ", r.x,r.y,r.w,r.h);
+      build_region(gvpx, gvpy);
+/*
+      for (x = 0; x < 4; x++) {
+        for (y = 0; y < 3; y++) {
+          build_region(r.x + x * REGION_SIZE*TILE_SIZE, r.y + y*REGION_SIZE*TILE_SIZE);
         }
       }
-      */
+*/
+
+      Crafty.viewport.x -= dx;
+      Crafty.viewport.y -= dy;
     };
 
     Crafty.addEvent(this, Crafty.stage.elem, "mousemove", scroll);
@@ -85,7 +94,7 @@ $(document).ready(function() {
     });
   });
 
-  var player = Crafty.e('2D, DOM, player, controls, collision')
+  var player = Crafty.e('2D, canvas, player, controls, collision')
     .attr({
       move: {
         left: false,
